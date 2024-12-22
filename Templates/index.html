@@ -53,12 +53,12 @@
                         .map(song => `<li>${song.title} - ${song.artist} (${song.listening_count} streams)</li>`)
                         .join("");
                     info.innerHTML = `
-                        <p><strong>Kompleksitas:</strong> ${data.complexity}</p>
+                        
                         <p><strong>Waktu Eksekusi:</strong> ${data.execution_time}</p>`;
                 } else {
                     songList.innerHTML = "";
                     info.innerHTML = "";
-                    alert(`${data.message}\nKompleksitas: ${data.complexity}\nWaktu Eksekusi: ${data.execution_time}`);
+                    alert(`${data.complexity}\nWaktu Eksekusi: ${data.execution_time}`);
                 }
             } catch (error) {
                 console.error("Error:", error);

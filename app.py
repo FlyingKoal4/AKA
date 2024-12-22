@@ -164,13 +164,11 @@ def filter_songs():
     if not result:
         return jsonify({
             "message": "Tidak ada lagu yang ditemukan",
-            "complexity": "O(n) untuk pencarian iteratif dan rekursif",
             "execution_time": f"{execution_time:.6f} detik"
         }), 404
 
     return jsonify({
         "songs": result,
-        "complexity": "O(n) untuk pencarian iteratif dan rekursif",
         "execution_time": f"{execution_time:.6f} detik"
     })
 
