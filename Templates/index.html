@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Lagu</title>
+    <script>
+        async function fetchSongs(method) {
+            try {
+                const response = await fetch(`/filter-songs?method=${method}`);
+                const data = await response.json();
+                if (response.ok) {
+                    const songList = document.getElementById("song-list");
+                    songList.innerHTML = data.songs
+                        .map(song => `<li>${song.title} - ${song.artist} (${song.listeners} pendengar)</li>`)
+                        .join("");
+                    document.getElementById("info").innerHTML = 
+                        `<p>Kompleksitas: ${data.complexity}</p>
+                         <p>Waktu Eksekusi: ${data.execution_time}</p>`;
+                } else {
+                    alert(`${data.message}\nKompleksitas: ${data.complexity}\nWaktu Eksekusi: ${data.execution_time}`);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>Daftar Lagu</h1>
+    <button onclick="fetchSongs('iterative')">Pencarian Iteratif</button>
+    <button onclick="fetchSongs('recursive')">Pencarian Rekursif</button>
+    <ul id="song-list"></ul>
+    <div id="info"></div>
+</body>
+</html>
