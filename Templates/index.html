@@ -4,32 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Lagu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        label, button {
+            margin-top: 10px;
+            display: inline-block;
+        }
+        input {
+            margin-bottom: 10px;
+        }
+        #song-list {
+            margin-top: 20px;
+            padding-left: 20px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
     <script>
         async function fetchSongs(method) {
+            const minListenersInput = document.getElementById("min-listeners");
+            const minListeners = minListenersInput.value;
+
+            if (minListeners === "" || isNaN(minListeners) || minListeners < 0) {
+                document.getElementById("error-message").textContent = "Masukkan jumlah minimum listeners yang valid (≥ 0).";
+                return;
+            }
+
+            document.getElementById("error-message").textContent = ""; // Clear error message
+            const songList = document.getElementById("song-list");
+            const info = document.getElementById("info");
+            songList.innerHTML = "<li>Loading...</li>";
+            info.innerHTML = "";
+
             try {
-                const response = await fetch(`/filter-songs?method=${method}`);
+                const response = await fetch(`/filter-songs?method=${method}&min_listeners=${minListeners}`);
                 const data = await response.json();
+
                 if (response.ok) {
-                    const songList = document.getElementById("song-list");
                     songList.innerHTML = data.songs
-                        .map(song => `<li>${song.title} - ${song.artist} (${song.listeners} pendengar)</li>`)
+                        .map(song => `<li>${song.title} - ${song.artist} (${song.listening_count} streams)</li>`)
                         .join("");
-                    document.getElementById("info").innerHTML = 
-                        `<p>Kompleksitas: ${data.complexity}</p>
-                         <p>Waktu Eksekusi: ${data.execution_time}</p>`;
+                    info.innerHTML = `
+                        <p><strong>Kompleksitas:</strong> ${data.complexity}</p>
+                        <p><strong>Waktu Eksekusi:</strong> ${data.execution_time}</p>`;
                 } else {
+                    songList.innerHTML = "";
+                    info.innerHTML = "";
                     alert(`${data.message}\nKompleksitas: ${data.complexity}\nWaktu Eksekusi: ${data.execution_time}`);
                 }
             } catch (error) {
                 console.error("Error:", error);
+                songList.innerHTML = "";
+                info.innerHTML = "";
+                document.getElementById("error-message").textContent = "Terjadi kesalahan saat memuat data. Coba lagi.";
             }
         }
     </script>
 </head>
 <body>
     <h1>Daftar Lagu</h1>
+    <label for="min-listeners">Minimum Listeners:</label>
+    <input type="number" id="min-listeners" value="500000" min="0" required>
+    <br>
     <button onclick="fetchSongs('iterative')">Pencarian Iteratif</button>
     <button onclick="fetchSongs('recursive')">Pencarian Rekursif</button>
+    <p class="error" id="error-message"></p>
     <ul id="song-list"></ul>
     <div id="info"></div>
 </body>
