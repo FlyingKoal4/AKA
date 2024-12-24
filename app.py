@@ -1,9 +1,11 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import time
+import os
+import matplotlib.pyplot as plt
 
 app = Flask(__name__)
 
-# Data array lagu
+# Data Lagu
 songs = [
     {"artist": "The Weeknd", "title": "Blinding Lights", "listening_count": 4619215892},
     {"artist": "Ed Sheeran", "title": "Shape of You", "listening_count": 4150542988},
@@ -116,9 +118,343 @@ songs = [
     {"artist": "Roddy Ricch", "title": "The Box", "listening_count": 2064640868},
     {"artist": "Charlie Puth", "title": "We Don't Talk Anymore", "listening_count": 2057739364},
     {"artist": "Sam Smith", "title": "I'm Not The Only One", "listening_count": 2050644847},
+    {"artist": "Queen", "title": "Another One Bites The Dust", "listening_count": 2049318005},
+    {"artist": "Maroon 5", "title": "Payphone", "listening_count": 2047309547},
+    {"artist": "Post Malone", "title": "Better Now", "listening_count": 2038379287},
+    {"artist": "Wiz Khalifa", "title": "See You Again", "listening_count": 2033040018},
+    {"artist": "Linkin Park", "title": "Numb", "listening_count": 2029507842},
+    {"artist": "Billie Eilish", "title": "when the party's over", "listening_count": 2026455213},
+    {"artist": "XXXTENTACION", "title": "Moonlight", "listening_count": 2024484201},
+    {"artist": "The Chainsmokers", "title": "Don't Let Me Down", "listening_count": 2020008791},
+    {"artist": "Eminem", "title": "The Real Slim Shady", "listening_count": 2019418837},
+    {"artist": "SAINt JHN", "title": "Roses", "listening_count": 2014382452},
+    {"artist": "Manuel Turizo", "title": "La Bachata", "listening_count": 2013739605},
+    {"artist": "Jason Mraz", "title": "I'm Yours", "listening_count": 2010839261},
+    {"artist": "Foster The People", "title": "Pumped Up Kicks", "listening_count": 2009811026},
+    {"artist": "Lil Nas X", "title": "MONTERO (Call Me By Your Name)", "listening_count": 2003424546},
+    {"artist": "Adele", "title": "Rolling in the Deep", "listening_count": 1998241990},
+    {"artist": "24kGoldn", "title": "Mood", "listening_count": 1992675245},
+    {"artist": "Imagine Dragons", "title": "Radioactive", "listening_count": 1991036902},
+    {"artist": "Doja Cat", "title": "Kiss Me More", "listening_count": 1988760359},
+    {"artist": "Michael Jackson", "title": "Billie Jean", "listening_count": 1988510872},
+    {"artist": "TOTO", "title": "Africa", "listening_count": 1980488075},
+    {"artist": "BTS", "title": "Dynamite", "listening_count": 1980316130},
+    {"artist": "Taylor Swift", "title": "Blank Space", "listening_count": 1977962812},
+    {"artist": "Adele", "title": "Easy On Me", "listening_count": 1975086015},
+    {"artist": "Ariana Grande", "title": "thank u, next", "listening_count": 1970457971},
+    {"artist": "Bad Bunny", "title": "Me Porto Bonito", "listening_count": 1967304093},
+    {"artist": "The Weeknd", "title": "Call Out My Name", "listening_count": 1966655109},
+    {"artist": "Arctic Monkeys", "title": "505", "listening_count": 1966443885},
+    {"artist": "Maroon 5", "title": "Sugar", "listening_count": 1964331267},
+    {"artist": "Avicii", "title": "The Nights", "listening_count": 1960325592},
+    {"artist": "Eminem", "title": "Mockingbird", "listening_count": 1937805183},
+    {"artist": "Gotye", "title": "Somebody That I Used To Know", "listening_count": 1936084527},
+    {"artist": "David Guetta", "title": "I’m Good (Blue)", "listening_count": 1932364889},
+    {"artist": "Radiohead", "title": "Creep", "listening_count": 1931147147},
+    {"artist": "Charlie Puth", "title": "Attention", "listening_count": 1930179367},
+    {"artist": "One Direction", "title": "Night Changes", "listening_count": 1928531949},
+    {"artist": "Coolio", "title": "Gangsta's Paradise", "listening_count": 1926279371},
+    {"artist": "Twenty One Pilots", "title": "Heathens", "listening_count": 1921710647},
+    {"artist": "Danny Ocean", "title": "Me Rehúso", "listening_count": 1920137277},
+    {"artist": "Ed Sheeran", "title": "I Don't Care", "listening_count": 1918781858},
+    {"artist": "WALK THE MOON", "title": "Shut Up and Dance", "listening_count": 1917339047},
+    {"artist": "Arctic Monkeys", "title": "Why'd You Only Call Me When You're High?", "listening_count": 1909860639},
+    {"artist": "Calvin Harris", "title": "This Is What You Came For", "listening_count": 1904301497},
+    {"artist": "Maroon 5", "title": "Maps", "listening_count": 1903133975},
+    {"artist": "Kendrick Lamar", "title": "All The Stars", "listening_count": 1900779159},
+    {"artist": "Lauv", "title": "I Like Me Better", "listening_count": 1898649195},
+    {"artist": "Fleetwood Mac", "title": "Dreams", "listening_count": 1897331343},
+    {"artist": "J Balvin", "title": "LA CANCIÓN", "listening_count": 1896210697},
+    {"artist": "5 Seconds of Summer", "title": "Youngblood", "listening_count": 1894425489},
+    {"artist": "Rihanna", "title": "We Found Love", "listening_count": 1894226052},
+    {"artist": "Tears For Fears", "title": "Everybody Wants To Rule The World", "listening_count": 1888481202},
+    {"artist": "Alec Benjamin", "title": "Let Me Down Slowly", "listening_count": 1884676483},
+    {"artist": "Shakira", "title": "Hips Don't Lie", "listening_count": 1884459273},
+    {"artist": "Conan Gray", "title": "Heather", "listening_count": 1883506820},
+    {"artist": "Sia", "title": "Chandelier", "listening_count": 1882615139},
+    {"artist": "Twenty One Pilots", "title": "Ride", "listening_count": 1880902272},
+    {"artist": "Travis Scott", "title": "HIGHEST IN THE ROOM", "listening_count": 1872210681},
+    {"artist": "Dean Lewis", "title": "Be Alright", "listening_count": 1870546125},
+    {"artist": "Sia", "title": "Cheap Thrills", "listening_count": 1866950554},
+    {"artist": "The Weeknd", "title": "Can't Feel My Face", "listening_count": 1865329437},
+    {"artist": "The Weeknd", "title": "I Feel It Coming", "listening_count": 1864929853},
+    {"artist": "Ed Sheeran", "title": "Bad Habits", "listening_count": 1856000616},
+    {"artist": "benny blanco", "title": "Eastside", "listening_count": 1850930038},
+    {"artist": "ZAYN", "title": "Dusk Till Dawn", "listening_count": 1848470964},
+    {"artist": "Luis Fonsi", "title": "Despacito (Featuring Daddy Yankee)", "listening_count": 1845917407},
+    {"artist": "OneRepublic", "title": "I Ain't Worried", "listening_count": 1844916037},
+    {"artist": "Creedence Clearwater Revival", "title": "Have You Ever Seen The Rain", "listening_count": 1844791678},
+    {"artist": "Earth, Wind & Fire", "title": "September", "listening_count": 1841908504},
+    {"artist": "Don Omar", "title": "Danza Kuduro", "listening_count": 1840616386},
+    {"artist": "Tame Impala", "title": "The Less I Know The Better", "listening_count": 1833461568},
+    {"artist": "Justin Timberlake", "title": "CAN'T STOP THE FEELING!", "listening_count": 1833399381},
+    {"artist": "Adele", "title": "Set Fire to the Rain", "listening_count": 1833334359},
+    {"artist": "The White Stripes", "title": "Seven Nation Army", "listening_count": 1829428186},
+    {"artist": "Bizarrap", "title": "Quevedo: Bzrp Music Sessions, Vol. 52", "listening_count": 1825505786},
+    {"artist": "OMI", "title": "Cheerleader (Felix Jaehn Remix)", "listening_count": 1824057872},
+    {"artist": "XXXTENTACION", "title": "Fuck Love", "listening_count": 1819379423},
+    {"artist": "Ruth B.", "title": "Dandelions", "listening_count": 1810565454},
+    {"artist": "Christina Perri", "title": "a thousand years", "listening_count": 1810223319},
+    {"artist": "Justin Bieber", "title": "Ghost", "listening_count": 1807670362},
+    {"artist": "AC/DC", "title": "Highway to Hell", "listening_count": 1806319398},
+    {"artist": "Keane", "title": "Somewhere Only We Know", "listening_count": 1799245285},
+    {"artist": "Juice WRLD", "title": "All Girls Are The Same", "listening_count": 1797746652},
+    {"artist": "Harry Styles", "title": "Adore You", "listening_count": 1797189980},
+    {"artist": "The Weeknd", "title": "Earned It (Fifty Shades Of Grey)", "listening_count": 1796047093},
+    {"artist": "David Guetta", "title": "Titanium", "listening_count": 1792491680},
+    {"artist": "Olivia Rodrigo", "title": "deja vu", "listening_count": 1791851806},
+    {"artist": "Bon Jovi", "title": "Livin' On A Prayer", "listening_count": 1788467387},
+    {"artist": "Ava Max", "title": "Sweet but Psycho", "listening_count": 1786374207},
+    {"artist": "ZAYN", "title": "I Don’t Wanna Live Forever (Fifty Shades Darker)", "listening_count": 1783087183},
+    {"artist": "Doja Cat", "title": "Woman", "listening_count": 1774675444},
+    {"artist": "Måneskin", "title": "Beggin'", "listening_count": 1773906478},
+    {"artist": "Wham!", "title": "Last Christmas", "listening_count": 1770940033},
+    {"artist": "Post Malone", "title": "Wow.", "listening_count": 1767155804},
+    {"artist": "Queen", "title": "Under Pressure", "listening_count": 1765971028},
+    {"artist": "Luis Fonsi", "title": "Despacito", "listening_count": 1762121267},
+    {"artist": "Olivia Rodrigo", "title": "traitor", "listening_count": 1761543669},
+    {"artist": "Billie Eilish", "title": "everything i wanted", "listening_count": 1758777445},
+    {"artist": "Eagles", "title": "Hotel California", "listening_count": 1758656827},
+    {"artist": "Powfu", "title": "death bed (coffee for your head)", "listening_count": 1757555764},
+    {"artist": "Miley Cyrus", "title": "Party In The U.S.A.", "listening_count": 1753626597},
+    {"artist": "Coldplay", "title": "A Sky Full of Stars", "listening_count": 1752776462},
+    {"artist": "Future", "title": "Mask Off", "listening_count": 1749979160},
+    {"artist": "Drake", "title": "Passionfruit", "listening_count": 1747585894},
+    {"artist": "The Walters", "title": "I Love You So", "listening_count": 1737374559},
+    {"artist": "Taylor Swift", "title": "Anti-Hero", "listening_count": 1736675169},
+    {"artist": "AC/DC", "title": "Back In Black", "listening_count": 1735435618},
+    {"artist": "Sabrina Carpenter", "title": "Espresso", "listening_count": 1734520644},
+    {"artist": "DNCE", "title": "Cake By The Ocean", "listening_count": 1733454603},
+    {"artist": "The Starlite Singers", "title": "Party In The U.S.A.", "listening_count": 1731667247},
+    {"artist": "Marshmello", "title": "Silence", "listening_count": 1729990865},
+    {"artist": "XXXTENTACION", "title": "Everybody Dies In Their Nightmares", "listening_count": 1728411058},
+    {"artist": "Ed Sheeran", "title": "Shivers", "listening_count": 1725648640},
+    {"artist": "Childish Gambino", "title": "Redbone", "listening_count": 1721553890},
+    {"artist": "The Weeknd", "title": "Save Your Tears", "listening_count": 1721177536},
+    {"artist": "Rihanna", "title": "Umbrella", "listening_count": 1719867738},
+    {"artist": "Eminem", "title": "Love The Way You Lie", "listening_count": 1717509448},
+    {"artist": "Train", "title": "Hey, Soul Sister", "listening_count": 1717454991},
+    {"artist": "Justin Bieber", "title": "What Do You Mean?", "listening_count": 1716901931},
+    {"artist": "Billie Eilish", "title": "BIRDS OF A FEATHER", "listening_count": 1713184350},
+    {"artist": "Bastille", "title": "Pompeii", "listening_count": 1710688748},
+    {"artist": "Trevor Daniel", "title": "Falling", "listening_count": 1709746001},
+    {"artist": "Offset", "title": "Ric Flair Drip", "listening_count": 1706350369},
+    {"artist": "Justin Bieber", "title": "Peaches", "listening_count": 1704753144},
+    {"artist": "Maroon 5", "title": "Girls Like You", "listening_count": 1703149254},
+    {"artist": "Lana Del Rey", "title": "Summertime Sadness", "listening_count": 1702889697},
+    {"artist": "Panic! At The Disco", "title": "High Hopes", "listening_count": 1702455277},
+    {"artist": "Post Malone", "title": "I Fall Apart", "listening_count": 1693949735},
+    {"artist": "Sam Smith", "title": "Unholy", "listening_count": 1693268385},
+    {"artist": "AC/DC", "title": "Thunderstruck", "listening_count": 1692912968},
+    {"artist": "Cardi B", "title": "I Like It", "listening_count": 1687180068},
+    {"artist": "DaBaby", "title": "ROCKSTAR", "listening_count": 1686423642},
+    {"artist": "50 Cent", "title": "In Da Club", "listening_count": 1685860339},
+    {"artist": "Benson Boone", "title": "Beautiful Things", "listening_count": 1680174784},
+    {"artist": "Calvin Harris", "title": "Summer", "listening_count": 1676858341},
+    {"artist": "Kendrick Lamar", "title": "Money Trees", "listening_count": 1676366885},
+    {"artist": "Beyoncé", "title": "Halo", "listening_count": 1675218977},
+    {"artist": "MAGIC!", "title": "Rude", "listening_count": 1673716984},
+    {"artist": "Imagine Dragons", "title": "Enemy (from the series Arcane League of Legends)", "listening_count": 1668610520},
+    {"artist": "Dua Lipa", "title": "IDGAF", "listening_count": 1664913719},
+    {"artist": "Harry Styles", "title": "Sign of the Times", "listening_count": 1662963900},
+    {"artist": "Pitbull", "title": "Timber", "listening_count": 1661952266},
+    {"artist": "Rihanna", "title": "Love On The Brain", "listening_count": 1654983949},
+    {"artist": "The Neighbourhood", "title": "Daddy Issues", "listening_count": 1653315804},
+    {"artist": "Maroon 5", "title": "Moves Like Jagger", "listening_count": 1651839433},
+    {"artist": "Khalid", "title": "Young Dumb & Broke", "listening_count": 1648586356},
+    {"artist": "Kings of Leon", "title": "Sex on Fire", "listening_count": 1639488860},
+    {"artist": "DJ Snake", "title": "Taki Taki", "listening_count": 1637837253},
+    {"artist": "Adele", "title": "Hello", "listening_count": 1632495043},
+    {"artist": "Backstreet Boys", "title": "I Want It That Way", "listening_count": 1632395221},
+    {"artist": "Taylor Swift", "title": "Lover", "listening_count": 1631446746},
+    {"artist": "Ariana Grande", "title": "One Last Time", "listening_count": 1631358874},
+    {"artist": "Major Lazer", "title": "Cold Water", "listening_count": 1631159451},
+    {"artist": "Coldplay", "title": "Fix You", "listening_count": 1629850484},
+    {"artist": "White Noise Baby Sleep", "title": "Clean White Noise", "listening_count": 1629312114},
+    {"artist": "Bad Bunny", "title": "Tití Me Preguntó", "listening_count": 1628808348},
+    {"artist": "The Script", "title": "Hall of Fame", "listening_count": 1627052747},
+    {"artist": "Billie Eilish", "title": "ocean eyes", "listening_count": 1625551173},
+    {"artist": "Clean Bandit", "title": "Rockabye", "listening_count": 1624984870},
+    {"artist": "Cigarettes After Sex", "title": "Apocalypse", "listening_count": 1620679320},
+    {"artist": "Rihanna", "title": "Needed Me", "listening_count": 1619677111},
+    {"artist": "Frank Ocean", "title": "Pink + White", "listening_count": 1613388056},
+    {"artist": "XXXTENTACION", "title": "Hope", "listening_count": 1612454165},
+    {"artist": "Anne-Marie", "title": "2002", "listening_count": 1612212690},
+    {"artist": "Eminem", "title": "Godzilla", "listening_count": 1607340814},
+    {"artist": "XXXTENTACION", "title": "Revenge", "listening_count": 1605773011},
+    {"artist": "Daniel Caesar", "title": "Best Part", "listening_count": 1605449393},
+    {"artist": "Tate McRae", "title": "you broke me first", "listening_count": 1603539009},
+    {"artist": "Travis Scott", "title": "BUTTERFLY EFFECT", "listening_count": 1600642804},
+    {"artist": "Milky Chance", "title": "Stolen Dance", "listening_count": 1600233211},
+    {"artist": "Ellie Goulding", "title": "Love Me Like You Do", "listening_count": 1599316484},
+    {"artist": "Miguel", "title": "Sure Thing", "listening_count": 1597352052},
+    {"artist": "Gorillaz", "title": "Feel Good Inc.", "listening_count": 1597331919},
+    {"artist": "Black Eyed Peas", "title": "I Gotta Feeling", "listening_count": 1596211081},
+    {"artist": "Lil Baby", "title": "Drip Too Hard (Lil Baby & Gunna)", "listening_count": 1594622027},
+    {"artist": "Farruko", "title": "Pepas", "listening_count": 1593904845},
+    {"artist": "Katy Perry", "title": "Dark Horse", "listening_count": 1592397335},
+    {"artist": "Clean Bandit", "title": "Symphony", "listening_count": 1588861690},
+    {"artist": "Zara Larsson", "title": "Lush Life", "listening_count": 1587683715},
+    {"artist": "Tate McRae", "title": "greedy", "listening_count": 1579611724},
+    {"artist": "Maroon 5", "title": "She Will Be Loved", "listening_count": 1579151509},
+    {"artist": "Zedd", "title": "The Middle", "listening_count": 1573187152},
+    {"artist": "Bruno Mars", "title": "Talking to the Moon", "listening_count": 1570535928},
+    {"artist": "Creedence Clearwater Revival", "title": "Fortunate Son", "listening_count": 1569868235},
+    {"artist": "Carly Rae Jepsen", "title": "Call Me Maybe", "listening_count": 1567606587},
+    {"artist": "Coldplay", "title": "Hymn for the Weekend", "listening_count": 1566964705},
+    {"artist": "Lil Nas X", "title": "Old Town Road", "listening_count": 1566747203},
+    {"artist": "Red Hot Chili Peppers", "title": "Californication", "listening_count": 1564654559},
+    {"artist": "Post Malone", "title": "Psycho", "listening_count": 1564506921},
+    {"artist": "KAROL G", "title": "Tusa", "listening_count": 1563662013},
+    {"artist": "Metallica", "title": "Enter Sandman (Remastered)", "listening_count": 1562544463},
+    {"artist": "Rihanna", "title": "Diamonds", "listening_count": 1561996322},
+    {"artist": "Eurythmics", "title": "Sweet Dreams (Are Made of This)", "listening_count": 1561742065},
+    {"artist": "Bad Bunny", "title": "Ojitos Lindos", "listening_count": 1560228913},
+    {"artist": "Dr. Dre", "title": "Still D.R.E.", "listening_count": 1559991617},
+    {"artist": "Bruno Mars", "title": "24K Magic", "listening_count": 1559660295},
+    {"artist": "Dynoro", "title": "In My Mind", "listening_count": 1555524094},
+    {"artist": "Lil Tecca", "title": "Ransom", "listening_count": 1555044788},
+    {"artist": "J Balvin", "title": "Mi Gente", "listening_count": 1554480708},
+    {"artist": "Rema", "title": "Calm Down", "listening_count": 1552517793},
+    {"artist": "Steve Lacy", "title": "Dark Red", "listening_count": 1551657067},
+    {"artist": "JAY-Z", "title": "Ni**as In Paris", "listening_count": 1550577778},
+    {"artist": "Snoop Dogg", "title": "Young, Wild & Free (feta. Bruno Mars)", "listening_count": 1544668143},
+    {"artist": "NF", "title": "Let You Down", "listening_count": 1544631704},
+    {"artist": "System Of A Down", "title": "Chop Suey!", "listening_count": 1539523603},
+    {"artist": "Bad Bunny", "title": "Callaita", "listening_count": 1539020328},
+    {"artist": "XXXTENTACION", "title": "Look At Me!", "listening_count": 1537410580},
+    {"artist": "Taylor Swift", "title": "Shake It Off", "listening_count": 1536900462},
+    {"artist": "Red Hot Chili Peppers", "title": "Under the Bridge", "listening_count": 1536249706},
+    {"artist": "Martin Garrix", "title": "In the Name of Love", "listening_count": 1536019853},
+    {"artist": "Ariana Grande", "title": "positions", "listening_count": 1532389940},
+    {"artist": "Kanye West", "title": "Heartless", "listening_count": 1528911712},
+    {"artist": "Unknown", "title": "Ain't No Mountain High Enough", "listening_count": 1524715091},
+    {"artist": "Ariana Grande", "title": "Side To Side", "listening_count": 1522515148},
+    {"artist": "R.E.M.", "title": "Losing My Religion", "listening_count": 1520357975},
+    {"artist": "Arizona Zervas", "title": "ROXANNE", "listening_count": 1519668524},
+    {"artist": "USHER", "title": "Yeah!", "listening_count": 1516280139},
+    {"artist": "Taylor Swift", "title": "cardigan", "listening_count": 1514324075},
+    {"artist": "P!nk", "title": "Just Give Me a Reason", "listening_count": 1513107839},
+    {"artist": "ABBA", "title": "Dancing Queen", "listening_count": 1512263324},
+    {"artist": "Maroon 5", "title": "Animals", "listening_count": 1511081069},
+    {"artist": "Kygo", "title": "It Ain't Me", "listening_count": 1510647485},
+    {"artist": "Alessia Cara", "title": "Scars To Your Beautiful", "listening_count": 1509272259},
+    {"artist": "Kanye West", "title": "Stronger", "listening_count": 1506836515},
+    {"artist": "Outkast", "title": "Hey Ya!", "listening_count": 1503812301},
+    {"artist": "Avicii", "title": "Waiting For Love", "listening_count": 1499302110},
+    {"artist": "One Direction", "title": "Story of My Life", "listening_count": 1497805337},
+    {"artist": "Rauw Alejandro", "title": "Todo De Ti", "listening_count": 1495716181},
+    {"artist": "Sia", "title": "Unstoppable", "listening_count": 1494399068},
+    {"artist": "Ariana Grande", "title": "Into You", "listening_count": 1493782497},
+    {"artist": "Lady Gaga", "title": "Poker Face", "listening_count": 1491255848},
+    {"artist": "The Beatles", "title": "Here Comes The Sun", "listening_count": 1490134754},
+    {"artist": "Metro Boomin", "title": "Creepin'", "listening_count": 1490070674},
+    {"artist": "Bruno Mars", "title": "Grenade", "listening_count": 1488888988},
+    {"artist": "Fifth Harmony", "title": "Work from Home", "listening_count": 1488147391},
+    {"artist": "Marshmello", "title": "FRIENDS", "listening_count": 1488087593},
+    {"artist": "Pharrell Williams", "title": "Happy", "listening_count": 1484162504},
+    {"artist": "Kendrick Lamar", "title": "LOVE. FEAT. ZACARI.", "listening_count": 1482040829},
+    {"artist": "Jonas Brothers", "title": "Sucker", "listening_count": 1480600810},
+    {"artist": "Lana Del Rey", "title": "Young And Beautiful", "listening_count": 1479006769},
+    {"artist": "Rihanna", "title": "Work", "listening_count": 1478788892},
+    {"artist": "The Weeknd", "title": "One Of The Girls", "listening_count": 1477333511},
+    {"artist": "Britney Spears", "title": "Toxic", "listening_count": 1476141654},
+    {"artist": "Bryson Tiller", "title": "Don't", "listening_count": 1474910096},
+    {"artist": "MKTO", "title": "Classic", "listening_count": 1471309112},
+    {"artist": "One Direction", "title": "What Makes You Beautiful", "listening_count": 1469793845},
+    {"artist": "Khalid", "title": "Better", "listening_count": 1469421333},
+    {"artist": "Rihanna", "title": "Stay", "listening_count": 1467915041},
+    {"artist": "Regard", "title": "Ride It", "listening_count": 1467818617},
+    {"artist": "JHAYCO", "title": "No Me Conoce", "listening_count": 1467507861},
+    {"artist": "Dream Supplier", "title": "Clean Baby Sleep White Noise (Loopable)", "listening_count": 1466714892},
+    {"artist": "Pitbull", "title": "Time of Our Lives", "listening_count": 1465698631},
+    {"artist": "Bad Bunny", "title": "Yonaguni", "listening_count": 1465393793},
+    {"artist": "Billie Eilish", "title": "Happier Than Ever", "listening_count": 1465010880},
+    {"artist": "Chris Brown", "title": "Under The Influence", "listening_count": 1460861441},
+    {"artist": "Unknown", "title": "Time Of Our Lives", "listening_count": 1460665121},
+    {"artist": "Capital Cities", "title": "Safe and Sound", "listening_count": 1458006332},
+    {"artist": "Nirvana", "title": "Come As You Are", "listening_count": 1457232545},
+    {"artist": "gnash", "title": "i hate u, i love u", "listening_count": 1454923831},
+    {"artist": "Gym Class Heroes", "title": "Stereo Hearts", "listening_count": 1443415628},
+    {"artist": "Lady Gaga", "title": "Always Remember Us This Way", "listening_count": 1442964030},
+    {"artist": "Shawn Mendes", "title": "Mercy", "listening_count": 1442431217},
+    {"artist": "Ed Sheeran", "title": "Beautiful People", "listening_count": 1441676808},
+    {"artist": "Khalid", "title": "Location", "listening_count": 1441198110},
+    {"artist": "Clean Bandit", "title": "Rather Be", "listening_count": 1438281108},
+    {"artist": "Sam Smith", "title": "Dancing With A Stranger", "listening_count": 1437857198},
+    {"artist": "Coldplay", "title": "Paradise", "listening_count": 1437601107},
+    {"artist": "Snow Patrol", "title": "Chasing Cars", "listening_count": 1436497576},
+    {"artist": "Survivor", "title": "Eye of the Tiger", "listening_count": 1435860358},
+    {"artist": "Axwell Ingrosso", "title": "More Than You Know", "listening_count": 1433405440},
+    {"artist": "Jessie J", "title": "Bang Bang", "listening_count": 1431834755},
+    {"artist": "Queen", "title": "We Will Rock You", "listening_count": 1431656068},
+    {"artist": "Bebe Rexha", "title": "Meant to Be", "listening_count": 1431241728},
+    {"artist": "Bruno Mars", "title": "Leave The Door Open", "listening_count": 1430157909},
+    {"artist": "Daddy Yankee", "title": "Con Calma", "listening_count": 1429262163},
+    {"artist": "Imagine Dragons", "title": "Bones", "listening_count": 1428130320},
+    {"artist": "Lost Frequencies", "title": "Where Are You Now", "listening_count": 1428089211},
+    {"artist": "Tyga", "title": "Taste", "listening_count": 1425483091},
+    {"artist": "ZAYN", "title": "PILLOWTALK", "listening_count": 1425430838},
+    {"artist": "Drake", "title": "In My Feelings", "listening_count": 1424295903},
+    {"artist": "Joji", "title": "Glimpse of Us", "listening_count": 1424284587},
+    {"artist": "XXXTENTACION", "title": "changes", "listening_count": 1419399751},
+    {"artist": "Portugal. The Man", "title": "Feel It Still", "listening_count": 1417735494},
+    {"artist": "Ed Sheeran", "title": "Castle on the Hill", "listening_count": 1416823601},
+    {"artist": "Selena Gomez", "title": "Wolves", "listening_count": 1414045202},
+    {"artist": "Pitbull", "title": "Give Me Everything", "listening_count": 1412254564},
+    {"artist": "Maluma", "title": "Hawái", "listening_count": 1412125840},
+    {"artist": "Bad Bunny", "title": "Efecto", "listening_count": 1408060288},
+    {"artist": "The Lumineers", "title": "Ho Hey", "listening_count": 1407677651},
+    {"artist": "Internet Money", "title": "Lemonade", "listening_count": 1404950540},
+    {"artist": "The Lumineers", "title": "Ophelia", "listening_count": 1404846201},
+    {"artist": "Lynyrd Skynyrd", "title": "Sweet Home Alabama", "listening_count": 1404117563},
+    {"artist": "G-Eazy", "title": "Me, Myself & I", "listening_count": 1400100037},
+    {"artist": "Drake", "title": "Hotline Bling", "listening_count": 1397130930},
+    {"artist": "Adele", "title": "When We Were Young", "listening_count": 1395601162},
+    {"artist": "Cardi B", "title": "WAP", "listening_count": 1392990748},
+    {"artist": "d4vd", "title": "Romantic Homicide", "listening_count": 1392393445},
+    {"artist": "Beyoncé", "title": "Crazy In Love", "listening_count": 1391211092},
+    {"artist": "Imagine Dragons", "title": "Whatever It Takes", "listening_count": 1390874958},
+    {"artist": "Juice WRLD", "title": "Robbery", "listening_count": 1390814574},
+    {"artist": "Teddy Swims", "title": "Lose Control", "listening_count": 1388737043},
+    {"artist": "Kesha", "title": "TiK ToK", "listening_count": 1388272612},
+    {"artist": "Mitski", "title": "My Love Mine All Mine", "listening_count": 1386512451},
+    {"artist": "A$AP Rocky", "title": "Praise The Lord (Da Shine)", "listening_count": 1385391218},
+    {"artist": "Joji", "title": "SLOW DANCING IN THE DARK", "listening_count": 1385350070},
+    {"artist": "Ariana Grande", "title": "no tears left to cry", "listening_count": 1384961025},
+    {"artist": "Lady Gaga", "title": "Bad Romance", "listening_count": 1384845285},
+    {"artist": "Major Lazer", "title": "Light It Up", "listening_count": 1378090472},
+    {"artist": "Ed Sheeran", "title": "Galway Girl", "listening_count": 1377711214},
+    {"artist": "Bad Bunny", "title": "MIA", "listening_count": 1377472177},
+    {"artist": "Logic", "title": "1-800-273-8255", "listening_count": 1375575554},
+    {"artist": "Coldplay", "title": "My Universe", "listening_count": 1375109720},
+    {"artist": "Red Hot Chili Peppers", "title": "Can't Stop", "listening_count": 1373303861},
+    {"artist": "Ed Sheeran", "title": "Happier", "listening_count": 1371698947},
+    {"artist": "J. Cole", "title": "MIDDLE CHILD", "listening_count": 1365430583},
+    {"artist": "Lil Mosey", "title": "Blueberry Faygo", "listening_count": 1363148161},
+    {"artist": "Nelly Furtado", "title": "Promiscuous", "listening_count": 1362549403},
+    {"artist": "White Noise Baby Sleep", "title": "Clean White Noise", "listening_count": 1361773739},
+    {"artist": "KAROL G", "title": "PROVENZA", "listening_count": 1361157088},
+    {"artist": "The Rolling Stones", "title": "Paint It, Black", "listening_count": 1360366495},
+    {"artist": "The Cranberries", "title": "Zombie", "listening_count": 1356373062},
+    {"artist": "Ed Sheeran", "title": "Shivers", "listening_count": 1356315091},
+    {"artist": "David Kushner", "title": "Daylight", "listening_count": 1355556638},
+    {"artist": "AC/DC", "title": "You Shook Me All Night Long", "listening_count": 1350842695},
+    {"artist": "J. Cole", "title": "Wet Dreamz", "listening_count": 1348394752},
+    {"artist": "Whitney Houston", "title": "I Wanna Dance with Somebody (Who Loves Me)", "listening_count": 1347252908},
+    {"artist": "FloyyMenor", "title": "Gata Only", "listening_count": 1346890087},
+    {"artist": "Martin Garrix", "title": "Scared to Be Lonely", "listening_count": 1346686051},
+    {"artist": "Lil Peep", "title": "Falling Down", "listening_count": 1346603535},
+    {"artist": "Lil Peep", "title": "Star Shopping", "listening_count": 1343537597},
+    {"artist": "Macklemore & Ryan Lewis", "title": "Thrift Shop", "listening_count": 1342038334},
+    {"artist": "Unknown", "title": "Thrift Shop", "listening_count": 1340373306},
+    {"artist": "Bryan Adams", "title": "Summer Of '69", "listening_count": 1339423879},
+    {"artist": "Taylor Swift", "title": "august", "listening_count": 1338254190},
+    {"artist": "Eslabon Armado", "title": "Ella Baila Sola", "listening_count": 1337225504},
+
 ]
-#updated html
-# Fungsi iteratif untuk mencari lagu
+
+# Fungsi iteratif berdasarkan jumlah pendengar
 def search_songs_iterative(songs, min_listeners):
     result = []
     for song in songs:
@@ -126,17 +462,14 @@ def search_songs_iterative(songs, min_listeners):
             result.append(song)
     return result
 
-# Fungsi rekursif untuk mencari lagu
+# Fungsi rekursif berdasarkan jumlah pendengar
 def search_songs_recursive(songs, min_listeners, index=0, result=None):
     if result is None:
         result = []
-    # Basis kasus: jika indeks sudah melewati panjang array
     if index >= len(songs):
         return result
-    # Tambahkan lagu jika jumlah pendengar >= min_listeners
     if songs[index]["listening_count"] >= min_listeners:
         result.append(songs[index])
-    # Rekursif ke elemen berikutnya
     return search_songs_recursive(songs, min_listeners, index + 1, result)
 
 @app.route("/")
@@ -145,32 +478,58 @@ def home():
 
 @app.route("/filter-songs", methods=["GET"])
 def filter_songs():
-    method = request.args.get("method", "iterative")
     min_listeners = int(request.args.get("min_listeners", 0))
-
-    start_time = time.time()
-
-    # Pilih metode pencarian
-    if method == "recursive":
-        result = search_songs_recursive(songs, min_listeners)
-    else:
-        result = search_songs_iterative(songs, min_listeners)
-
-    end_time = time.time()
-
-    # Hitung waktu eksekusi
-    execution_time = end_time - start_time
-
-    if not result:
+    
+    start_time_iterative = time.time()
+    result_iterative = search_songs_iterative(songs, min_listeners)
+    execution_time_iterative = time.time() - start_time_iterative
+    
+    start_time_recursive = time.time()
+    result_recursive = search_songs_recursive(songs, min_listeners)
+    execution_time_recursive = time.time() - start_time_recursive
+    
+    if not result_iterative and not result_recursive:
         return jsonify({
             "message": "Tidak ada lagu yang ditemukan",
-            "execution_time": f"{execution_time:.6f} detik"
+            "complexity": "O(n) untuk pencarian iteratif dan rekursif",
+            "execution_time_iterative": f"{execution_time_iterative:.6f}",
+            "execution_time_recursive": f"{execution_time_recursive:.6f}"
         }), 404
 
+    plt.figure(figsize=(8, 6))
+    methods = ['Iterative', 'Recursive']
+    times = [execution_time_iterative, execution_time_recursive]
+    
+    plt.bar(methods, times, color=['skyblue', 'lightcoral'])
+    plt.title('Execution Time Comparison')
+    plt.ylabel('Time (seconds)')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    
+    plt.ticklabel_format(axis='y', style='scientific', scilimits=(0,0))
+    
+    # Ensure the static folder exists
+    if not os.path.exists('static'):
+        os.makedirs('static')
+    
+    # Clear the current plot
+    plot_filename = os.path.join('static', 'execution_time_plot.png')
+    if os.path.exists(plot_filename):
+        os.remove(plot_filename)
+    
+    plt.savefig(plot_filename)
+    plt.close('all')  # Close all figures to free memory
+
     return jsonify({
-        "songs": result,
-        "execution_time": f"{execution_time:.6f} detik"
+        "songs": result_iterative,  # Using iterative result for display
+        "complexity": "O(n) untuk pencarian iteratif dan rekursif",
+        "execution_time_iterative": f"{execution_time_iterative:.6f}",
+        "execution_time_recursive": f"{execution_time_recursive:.6f}",
+        "plot_url": 'execution_time_plot.png'
     })
 
+
+@app.route('/static/execute_time_plot.png')
+def serve_static():
+    return send_from_directory('static', 'execute_time_plot.png')
 if __name__ == "__main__":
     app.run(debug=True)

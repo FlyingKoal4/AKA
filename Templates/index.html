@@ -3,82 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daftar Lagu</title>
+    <title>Song Search</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        h1 {
-            color: #333;
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        label, button {
-            margin-top: 10px;
-            display: inline-block;
+        .search-container {
+            margin-bottom: 20px;
         }
-        input {
-            margin-bottom: 10px;
+        input[type="number"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
         }
-        #song-list {
+        button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
             margin-top: 20px;
-            padding-left: 20px;
         }
-        .error {
-            color: red;
-            margin-top: 10px;
+        .performance-metrics {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        .plot-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .plot-container img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
-    <script>
-        async function fetchSongs(method) {
-            const minListenersInput = document.getElementById("min-listeners");
-            const minListeners = minListenersInput.value;
+</head>
+<body>
+    <div class="container">
+        <h1>Song Search</h1>
+        <div class="search-container">
+            <input type="number" id="minListeners" placeholder="Minimum Listeners" min="0">
+            <button onclick="searchSongs()">Search</button>
+        </div>
+        
+        <div class="performance-metrics" id="metrics" style="display: none;">
+            <h3>Performance Metrics</h3>
+            <p>Iterative Search Time: <span id="iterativeTime"></span> seconds</p>
+            <p>Recursive Search Time: <span id="recursiveTime"></span> seconds</p>
+            <p>Time Complexity: <span id="complexity"></span></p>
+        </div>
 
-            if (minListeners === "" || isNaN(minListeners) || minListeners < 0) {
-                document.getElementById("error-message").textContent = "Masukkan jumlah minimum listeners yang valid (≥ 0).";
-                return;
+        <div class="plot-container" id="plotContainer" style="display: none;">
+            <h3>Execution Time Comparison</h3>
+            <img id="plotImage" alt="Execution Time Plot">
+        </div>
+
+        <div class="results" id="results">
+            <table id="songsTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>Artist</th>
+                        <th>Title</th>
+                        <th>Listening Count</th>
+                    </tr>
+                </thead>
+                <tbody id="songsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function searchSongs() {
+            const minListeners = document.getElementById('minListeners').value || 0;
+            const response = await fetch(`/filter-songs?min_listeners=${minListeners}`);
+            const data = await response.json();
+
+            // Update performance metrics
+            document.getElementById('metrics').style.display = 'block';
+            document.getElementById('iterativeTime').textContent = data.execution_time_iterative;
+            document.getElementById('recursiveTime').textContent = data.execution_time_recursive;
+            document.getElementById('complexity').textContent = data.complexity;
+
+            // Update plot
+            if (data.plot_url) {
+                document.getElementById('plotContainer').style.display = 'block';
+                document.getElementById('plotImage').src = '/static/' + data.plot_url;
             }
 
-            document.getElementById("error-message").textContent = ""; // Clear error message
-            const songList = document.getElementById("song-list");
-            const info = document.getElementById("info");
-            songList.innerHTML = "<li>Loading...</li>";
-            info.innerHTML = "";
+            // Update table
+            const table = document.getElementById('songsTable');
+            const tableBody = document.getElementById('songsTableBody');
+            tableBody.innerHTML = '';
 
-            try {
-                const response = await fetch(`/filter-songs?method=${method}&min_listeners=${minListeners}`);
-                const data = await response.json();
-
-                if (response.ok) {
-                    songList.innerHTML = data.songs
-                        .map(song => `<li>${song.title} - ${song.artist} (${song.listening_count} streams)</li>`)
-                        .join("");
-                    info.innerHTML = `
-                        
-                        <p><strong>Waktu Eksekusi:</strong> ${data.execution_time}</p>`;
-                } else {
-                    songList.innerHTML = "";
-                    info.innerHTML = "";
-                    alert(`${data.complexity}\nWaktu Eksekusi: ${data.execution_time}`);
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                songList.innerHTML = "";
-                info.innerHTML = "";
-                document.getElementById("error-message").textContent = "Terjadi kesalahan saat memuat data. Coba lagi.";
+            if (data.songs && data.songs.length > 0) {
+                table.style.display = 'table';
+                data.songs.forEach(song => {
+                    const row = tableBody.insertRow();
+                    row.insertCell(0).textContent = song.artist;
+                    row.insertCell(1).textContent = song.title;
+                    row.insertCell(2).textContent = song.listening_count.toLocaleString();
+                });
+            } else {
+                table.style.display = 'none';
             }
         }
     </script>
-</head>
-<body>
-    <h1>Daftar Lagu</h1>
-    <label for="min-listeners">Minimum Listeners:</label>
-    <input type="number" id="min-listeners" value="500000" min="0" required>
-    <br>
-    <button onclick="fetchSongs('iterative')">Pencarian Iteratif</button>
-    <button onclick="fetchSongs('recursive')">Pencarian Rekursif</button>
-    <p class="error" id="error-message"></p>
-    <ul id="song-list"></ul>
-    <div id="info"></div>
 </body>
 </html>
-<!-- updated html input listeners -->
